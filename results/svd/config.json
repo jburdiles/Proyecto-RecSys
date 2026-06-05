@@ -1,0 +1,6 @@
+{
+  "model": "SVD",
+  "n_factors": 50,
+  "random_state": 42,
+  "library": "sklearn.decomposition.TruncatedSVD"
+}

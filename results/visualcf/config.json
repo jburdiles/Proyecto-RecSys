@@ -1,0 +1,7 @@
+{
+  "model": "VisualCF",
+  "alpha": 0.5,
+  "n_factors": 50,
+  "image_model": "CLIP (512d)",
+  "like_threshold": 4.0
+}

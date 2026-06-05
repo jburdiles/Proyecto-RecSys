@@ -1,0 +1,7 @@
+{
+  "model": "TextCF",
+  "alpha": 0.5,
+  "n_factors": 50,
+  "sbert_model": "all-MiniLM-L6-v2",
+  "like_threshold": 4.0
+}
