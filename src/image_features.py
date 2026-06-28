@@ -28,7 +28,10 @@ class CLIPFeatureExtractor:
         inputs = self._processor(images=images, return_tensors="pt", padding=True)
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
         with torch.no_grad():
-            feats = self._model.get_image_features(**inputs)
+            out = self._model.get_image_features(**inputs)
+        # transformers >=5 devuelve BaseModelOutputWithPooling (embed proyectado en
+        # .pooler_output); versiones previas devuelven el tensor directo
+        feats = out.pooler_output if hasattr(out, "pooler_output") else out
         feats = feats / feats.norm(dim=-1, keepdim=True)
         return feats.cpu().numpy()
 

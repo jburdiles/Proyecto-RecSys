@@ -50,14 +50,58 @@ def ndcg_at_k(recommended, relevant, k):
     return dcg / idcg if idcg > 0 else 0.0
 
 
-def evaluate_model(recommend_fn, test_df, train_df, k_values=[5, 10, 20], min_test_items=1):
+def item_popularity(train_df):
+    """Popularidad = fraccion de usuarios que interactuaron con cada item en train."""
+    n_users = train_df["user_id"].nunique()
+    counts = train_df.groupby("business_id")["user_id"].nunique()
+    return (counts / n_users).to_dict(), n_users
+
+
+def novelty_at_k(recommended, popularity, n_users, k):
+    """Novedad media (self-information) de la lista top-k. Mayor = items menos populares."""
+    top_k = recommended[:k]
+    if not top_k:
+        return 0.0
+    floor = 1.0 / n_users  # items no vistos en train: tratados como vistos por ~nadie
+    return float(np.mean([
+        -np.log2(max(popularity.get(item, floor), floor)) for item in top_k
+    ]))
+
+
+def intra_list_diversity(recommended, item_features, k):
+    """
+    Diversidad intra-lista (ILD): disimilitud coseno media entre todos los
+    pares de items de la lista top-k. 0 = items identicos, 1 = ortogonales.
+    Solo usa items que tienen embedding; devuelve None si quedan <2.
+    Para comparar modelos hay que pasar SIEMPRE el mismo espacio de features.
+    """
+    top_k = [i for i in recommended[:k] if i in item_features]
+    if len(top_k) < 2:
+        return None
+    V = np.stack([item_features[i] for i in top_k]).astype(float)
+    V = V / (np.linalg.norm(V, axis=1, keepdims=True) + 1e-12)
+    sims = V @ V.T
+    iu = np.triu_indices(len(top_k), k=1)  # solo pares (i<j), sin diagonal
+    return float(np.mean(1.0 - sims[iu]))
+
+
+def evaluate_model(recommend_fn, test_df, train_df, k_values=[5, 10, 20],
+                   min_test_items=1, item_features=None):
     """
     Evalúa un modelo sobre el conjunto de test.
     recommend_fn recibe user_id y top_k, devuelve lista de business_ids.
     Solo evalúa usuarios con al menos `min_test_items` items en test.
-    Devuelve DataFrame con métricas promediadas por K.
+    Si se pasa `item_features` (dict business_id -> vector), agrega la
+    columna `ild` (diversidad intra-lista). Devuelve DataFrame por K.
     """
     results = defaultdict(list)
+    ild_scores = defaultdict(list)
+    recommended_items = defaultdict(set)  # union de recomendaciones por K -> coverage
+
+    popularity, n_users = item_popularity(train_df)
+    # catalogo evaluable = items con interacciones (train ∪ test), fijo entre modelos
+    catalog = set(train_df["business_id"]) | set(test_df["business_id"])
+    catalog_size = len(catalog)
 
     test_users = test_df.groupby("user_id")["business_id"].apply(set)
     test_users = test_users[test_users.apply(len) >= min_test_items]
@@ -75,14 +119,26 @@ def evaluate_model(recommend_fn, test_df, train_df, k_values=[5, 10, 20], min_te
                 "precision": precision_at_k(recommended, relevant, k),
                 "recall": recall_at_k(recommended, relevant, k),
                 "ndcg": ndcg_at_k(recommended, relevant, k),
+                "novelty": novelty_at_k(recommended, popularity, n_users, k),
             })
+            recommended_items[k].update(recommended[:k])
+            if item_features is not None:
+                ild = intra_list_diversity(recommended, item_features, k)
+                if ild is not None:
+                    ild_scores[k].append(ild)
 
     rows = []
     for k in k_values:
         if not results[k]:
             continue
         metrics = pd.DataFrame(results[k]).mean()
-        rows.append({"K": k, **metrics.to_dict()})
+        row = {"K": k, **metrics.to_dict()}
+        # coverage: fraccion del catalogo evaluable que el modelo llega a recomendar
+        covered = recommended_items[k] & catalog
+        row["coverage"] = len(covered) / catalog_size if catalog_size else 0.0
+        if item_features is not None and ild_scores[k]:
+            row["ild"] = float(np.mean(ild_scores[k]))
+        rows.append(row)
 
     return pd.DataFrame(rows).set_index("K")
 

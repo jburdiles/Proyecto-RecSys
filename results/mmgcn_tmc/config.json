@@ -19,6 +19,6 @@
   "fusion": "Dempster-Shafer (TMC, Han et al. TPAMI 2023)",
   "fusion_ref": "DOI: 10.1109/TPAMI.2022.3171983",
   "gcn_layers": 3,
-  "n_items_multimodal": 1151,
-  "n_users": 10490
+  "n_items_multimodal": 3822,
+  "n_users": 18117
 }
