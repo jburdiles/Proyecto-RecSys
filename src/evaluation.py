@@ -68,6 +68,10 @@ def novelty_at_k(recommended, popularity, n_users, k):
     ]))
 
 
+def hit_rate_at_k(recommended, relevant, k):
+    return 1.0 if any(item in relevant for item in recommended[:k]) else 0.0
+
+
 def intra_list_diversity(recommended, item_features, k):
     """
     Diversidad intra-lista (ILD): disimilitud coseno media entre todos los
@@ -120,6 +124,7 @@ def evaluate_model(recommend_fn, test_df, train_df, k_values=[5, 10, 20],
                 "recall": recall_at_k(recommended, relevant, k),
                 "ndcg": ndcg_at_k(recommended, relevant, k),
                 "novelty": novelty_at_k(recommended, popularity, n_users, k),
+                "hit_rate": hit_rate_at_k(recommended, relevant, k),
             })
             recommended_items[k].update(recommended[:k])
             if item_features is not None:
@@ -141,6 +146,24 @@ def evaluate_model(recommend_fn, test_df, train_df, k_values=[5, 10, 20],
         rows.append(row)
 
     return pd.DataFrame(rows).set_index("K")
+
+
+def evaluate_rmse(predict_fn, test_df):
+    """
+    RMSE y MAE de predicción de rating sobre el test set.
+    predict_fn(user_id, item_id) -> float | None (None si el modelo no cubre el par).
+    """
+    preds, actuals = [], []
+    for _, row in test_df.iterrows():
+        p = predict_fn(row['user_id'], row['business_id'])
+        if p is not None:
+            preds.append(p)
+            actuals.append(row['stars'])
+    if not preds:
+        return {'rmse': float('nan'), 'mae': float('nan')}
+    errors = np.array(preds) - np.array(actuals)
+    print(f'Evaluado sobre {len(preds):,} pares ({len(preds)/len(test_df)*100:.1f}% del test set)')
+    return {'rmse': float(np.sqrt(np.mean(errors**2))), 'mae': float(np.mean(np.abs(errors)))}
 
 
 def compare_models(models, test_df, train_df, k_values=[5, 10, 20]):
