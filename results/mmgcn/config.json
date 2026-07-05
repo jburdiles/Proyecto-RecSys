@@ -15,6 +15,6 @@
   "loss": "BPR + L2 reg",
   "fusion": "avg(img_rep, text_rep)",
   "gcn_layers": 3,
-  "n_items_multimodal": 1151,
-  "n_users": 18052
+  "n_items_multimodal": 1830,
+  "n_users": 18117
 }
