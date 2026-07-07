@@ -1,6 +1,6 @@
 # RecSys Restaurantes - Recomendación Multimodal con Yelp
 
-Proyecto final de Sistemas de Recomendación - Joaquín Burdiles, Marcelo Vargas, Alonso Tamayo.  
+Proyecto final de Sistemas de Recomendación - Joaquín Burdiles, Alonso Tamayo, Marcelo Vargas.  
 Pontificia Universidad Católica de Chile · IIC3633 · 2026-1
 
 Exploramos recomendación de restaurantes combinando **filtrado colaborativo**, **texto** (reviews, SBERT) e **imágenes** (fotos, CLIP) del dataset público de Yelp, incluyendo modelos basados en redes de grafos multimodales con fusión por Dempster-Shafer.
