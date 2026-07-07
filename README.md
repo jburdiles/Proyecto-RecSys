@@ -102,13 +102,6 @@ Los modelos de Sentence-Transformers (`all-MiniLM-L6-v2`) y CLIP (`ViT-B/32`) se
 │   ├── eda/               # figuras del análisis exploratorio
 │   ├── summary_k10.csv    # tabla resumen a K=10
 │   └── comparison.png     # figura comparativa de todas las curvas
-├── docs/
-│   ├── H1_Propuesta.tex   # propuesta del proyecto (hito 1)
-│   └── h2_informe.tex     # informe intermedio (hito 2)
-├── paper/
-│   ├── paper.tex          # paper final (formato ICML 2025)
-│   ├── paper.bib          # referencias del paper
-│   └── icml2025.sty ...   # archivos del template ICML
 └── requirements.txt
 ```
 
@@ -198,12 +191,6 @@ Evaluación sobre conjunto de test. Split temporal 80/20 (respetando el orden cr
 - Los embeddings se guardan en `data/embeddings/` y se cargan sin recalcular en ejecuciones posteriores.
 - **Cobertura multimodal**: los embeddings CLIP cubren los 3,824 restaurantes (VisualCF), mientras que los embeddings de texto SBERT cubren los 1,830 restaurantes reseñados en train. Los modelos GCN (MMGCN / MMGCN-TMC) operan sobre esos 1,830 restaurantes con ambas modalidades.
 - Todo corre **localmente**, sin APIs de pago ni modelos propietarios.
-
----
-
-## Paper
-
-El paper final del proyecto (formato ICML 2025) está en [paper/paper.tex](paper/paper.tex), con su bibliografía en [paper/paper.bib](paper/paper.bib). Documenta el problema, la metodología, los resultados y la discusión, y es consistente con los notebooks y los resultados de este repositorio. Compilar con `pdflatex` + `bibtex` dentro del directorio `paper/`.
 
 ---
 
